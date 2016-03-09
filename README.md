@@ -3,7 +3,7 @@ Synapse Mediator for creating properties out of templates
 
 Sample Syntax
 ```xml
-<propertyTemplate media-type="xml|json|string">
+<propertyTemplate media-type="xml|json">
    <format>
       <person>
          <name>$name</name>
