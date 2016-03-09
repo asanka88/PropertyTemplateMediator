@@ -32,6 +32,9 @@ public class PropertyTemplateMediator extends AbstractMediator{
     String body;
     String propertyName;
     String scope;
+    String mediaType;
+    String targetType;
+
 
     public boolean mediate(MessageContext messageContext) {
         //evaluate values
@@ -72,6 +75,22 @@ public class PropertyTemplateMediator extends AbstractMediator{
         }
 
         return true;
+    }
+
+    public String getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
     }
 
     public String getPropertyName() {

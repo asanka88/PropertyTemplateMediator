@@ -1,6 +1,7 @@
 package org.asanka.dev;
 
 import org.apache.axiom.om.OMElement;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.synapse.Mediator;
 import org.apache.synapse.config.xml.AbstractMediatorFactory;
@@ -20,28 +21,44 @@ public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
     public static final QName formatElement=new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"format");
     public static final QName argumentListElement =new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"args");
     public static final QName argumentElement =new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"arg");
+    public static final QName targetElement =new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"target");
     public static final QName expressionAttribute=new QName("expression");
     public static final QName nameAttribute =new QName("name");
     public static final QName scopeAttribute=new QName("scope");
+    public static final QName mediaTypeAttribute=new QName("media-type");
+    public static final String[] supportedMediaTypes={"xml","json"};
+    public static final QName targetType=new QName("type");
+    public static final String[] supportedTargetypes={"body","property","soap-header","soap-envelope"};
+
+
 
     @Override
     protected Mediator createSpecificMediator(OMElement omElement, Properties properties) {
         PropertyTemplateMediator mediator=new PropertyTemplateMediator();
-        String propertyName = omElement.getAttributeValue(nameAttribute);
-        if(StringUtils.isEmpty(propertyName)){
-            throw new SynapseArtifactDeploymentException("name is empty in PropertyTemplate Mediator");
+        String mediaTypeAttrValue = omElement.getAttributeValue(mediaTypeAttribute);
+        String mediaType = StringUtils.isEmpty(mediaTypeAttrValue)?"xml":mediaTypeAttrValue;
+        if(StringUtils.isEmpty(mediaType)){
+            mediaType="xml";//setting default media type
+        }else{
+            if(ArrayUtils.indexOf(supportedMediaTypes,mediaType)<0){
+                String message =String.format("Unsupported media type %s in PropertyTemplate Mediator",mediaType) ;
+                throw new SynapseArtifactDeploymentException(message);
+            }
         }
-        mediator.setPropertyName(propertyName);
-        String scope = omElement.getAttributeValue(scopeAttribute);
-        if(StringUtils.isEmpty(scope)) {
-            scope="default";
-        }
-        mediator.setScope(scope);
+        mediator.setMediaType(mediaType);//setting media type
         OMElement format = omElement.getFirstChildWithName(formatElement);
-        OMElement templateBody = format.getFirstElement();
-        if(templateBody ==null){
+        if(format == null || (StringUtils.equals("xml",mediaType)&& format.getFirstElement()==null) ||
+                (StringUtils.equals("json",mediaType)&& StringUtils.isEmpty(format.getText()))){
+            //meets failure condition
+            //format element is null or
+            //if xml this doesn't have xml template body or
+            //if json this doesn't have json string
             throw new SynapseArtifactDeploymentException("Template format is empty in PropertyTemplate Mediator");
         }
+        //if media type is xml then the template body is first element of the format element
+        //other wise it is json, then it is json string wrapped by format element
+        String templateBody=(StringUtils.equals("xml",mediaType))?format.getFirstElement().toString():format.getText();
+        mediator.setBody(templateBody);
 
         OMElement argumentList = omElement.getFirstChildWithName(argumentListElement);
         Iterator<OMElement> argumentsIterator = argumentList.getChildrenWithName(argumentElement);
@@ -61,7 +78,29 @@ public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
         }
 
         mediator.setxPathExpressions(synXpathMap);
-        mediator.setBody(templateBody.toString());
+
+        OMElement targetEle = omElement.getFirstChildWithName(targetElement);
+        if(targetElement==null){
+            throw new SynapseArtifactDeploymentException("Target element is missing in the Template Mediator");
+        }
+        String targetTypeValue =targetEle.getAttributeValue(targetType);
+        targetTypeValue=(StringUtils.isEmpty(targetTypeValue))?"body":targetTypeValue;
+        mediator.setTargetType(targetTypeValue);
+        if(StringUtils.equalsIgnoreCase("property",targetTypeValue)){
+            //if the target type is property then property name is mandotary
+            String propertyName = targetEle.getAttributeValue(nameAttribute);
+            if(StringUtils.isEmpty(propertyName)){
+                throw new SynapseArtifactDeploymentException("property name attribute is required in Template Mediator," +
+                        " when the type is property");
+
+            }
+            String scope = targetEle.getAttributeValue(scopeAttribute);
+            scope=(StringUtils.isEmpty(scope))?"default":scope;
+            mediator.setPropertyName(propertyName);
+            mediator.setScope(scope);
+        }
+
+
         return mediator;
     }
 

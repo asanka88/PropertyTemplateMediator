@@ -17,25 +17,27 @@ import javax.xml.stream.XMLStreamException;
  */
 public class FactoryTest {
 @Test
-public void factoryTest() throws XMLStreamException {
+public void factoryTestXML() throws XMLStreamException {
 
-    String conf="<propertyTemplate name=\"outProp\" scope=\"default\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
-            "<format>\n" +
-            "  <person>\n" +
-            "  \t<name>$name</name>\n" +
-            "  \t<age>$age</age>\n" +
-            "  </person>\n" +
-            "</format>\n" +
-            "<args>\n" +
-            "\t<arg name=\"name\" expression=\"$ctx:name\"/>\n" +
-            "<arg name=\"age\" expression=\"$ctx:age\"/>\n" +
-            "</args>\n" +
+    String conf="<propertyTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
+            "   <format>\n" +
+            "      <person>\n" +
+            "         <name>$name</name>\n" +
+            "         <age>$age</age>\n" +
+            "      </person>\n" +
+            "   </format>\n" +
+            "   <args>\n" +
+            "      <arg name=\"name\" expression=\"$ctx:name\" />\n" +
+            "      <arg name=\"age\" expression=\"$ctx:age\" />\n" +
+            "   </args>\n" +
+            "   <target type=\"property\" name=\"propertyName\" scope=\"propertyScope\" />\n" +
             "</propertyTemplate>";
 
     OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
     PropertyTemplateMediatorFactory factory=new PropertyTemplateMediatorFactory();
     PropertyTemplateMediator mediator = (PropertyTemplateMediator) factory.createMediator(confOMelemnt, null);
-    Assert.assertEquals(mediator.getPropertyName(),"outProp");
+    System.out.printf(mediator.getMediaType());
+//    Assert.assertEquals(mediator.getPropertyName(),"outProp");
 
 
     PropertyTemplateMediatorSerializer serializer=new PropertyTemplateMediatorSerializer();
@@ -44,5 +46,37 @@ public void factoryTest() throws XMLStreamException {
     System.out.printf(result.toString());
 
 }
+
+
+@Test
+    public void factoryTestJSON() throws XMLStreamException {
+
+        String conf="<propertyTemplate media-type=\"json\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
+                "   <format>\n" +
+                "      {\"name\":$name,\n" +
+                "      \"age\"\"$age\n" +
+                "      }\n" +
+                "   </format>\n" +
+                "   <args>\n" +
+                "      <arg name=\"name\" expression=\"$ctx:name\" />\n" +
+                "      <arg name=\"age\" expression=\"$ctx:age\" />\n" +
+                "   </args>\n" +
+                "   <target type=\"property\" name=\"propertyName\" scope=\"propertyScope\" />\n" +
+                "</propertyTemplate>";
+
+        OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
+        PropertyTemplateMediatorFactory factory=new PropertyTemplateMediatorFactory();
+        PropertyTemplateMediator mediator = (PropertyTemplateMediator) factory.createMediator(confOMelemnt, null);
+        System.out.printf(mediator.getMediaType());
+        System.out.printf(mediator.getBody());
+//    Assert.assertEquals(mediator.getPropertyName(),"outProp");
+
+
+    PropertyTemplateMediatorSerializer serializer=new PropertyTemplateMediatorSerializer();
+    OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
+    OMElement result = serializer.serializeMediator(null, mediator);
+    System.out.printf(result.toString());
+
+    }
 
 }
