@@ -4,10 +4,15 @@ import com.jayway.jsonpath.JsonPath;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.axiom.om.xpath.AXIOMXPath;
+import org.apache.axiom.soap.SOAPBody;
+import org.apache.axis2.AxisFault;
+import org.apache.commons.lang.StringUtils;
 import org.apache.synapse.ManagedLifecycle;
 import org.apache.synapse.MessageContext;
 import org.apache.synapse.SynapseException;
+import org.apache.synapse.commons.json.JsonUtil;
 import org.apache.synapse.core.SynapseEnvironment;
+import org.apache.synapse.core.axis2.SOAPUtils;
 import org.apache.synapse.mediators.AbstractMediator;
 import org.apache.synapse.util.AXIOMUtils;
 import org.apache.synapse.util.xpath.SynapseXPath;
@@ -16,6 +21,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.jaxen.JaxenException;
 
 import javax.xml.stream.XMLStreamException;
+import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -26,7 +32,7 @@ import java.util.Map;
 /**
  * Created by asanka on 3/7/16.
  */
-public class PropertyTemplateMediator extends AbstractMediator{
+public class PropertyTemplateMediator extends AbstractMediator implements ManagedLifecycle{
 
     Map xPathExpressions;
     String body;
@@ -34,7 +40,7 @@ public class PropertyTemplateMediator extends AbstractMediator{
     String scope;
     String mediaType;
     String targetType;
-
+    VelocityEngine velocityEngine;
 
     public boolean mediate(MessageContext messageContext) {
         //evaluate values
@@ -47,34 +53,56 @@ public class PropertyTemplateMediator extends AbstractMediator{
                 Object result = next.getValue().evaluate(messageContext);
                 context.put(next.getKey(),result);
             } catch (JaxenException e) {
+                //TODO:handler exception
                 e.printStackTrace();
             }
 
         }
-
-
-        //replace body using velocity template engine
-        VelocityEngine ve = new VelocityEngine();
-
-        ve.init();
         StringWriter writer = new StringWriter();
-        OMElement resultOM=null;
-        boolean propTempate = ve.evaluate(context, writer, "propTempate", new StringReader(this.getBody()));
-        try {
-            resultOM = AXIOMUtil.stringToOM(writer.toString());
-        } catch (XMLStreamException e) {
-
-
-        }
-        if(!propTempate && resultOM!=null){
-            throw new SynapseException("Failed at template evaluation");
-        }else{
-            //output porerty name //scope
-            //TODO Implement to support other scopes
-            messageContext.setProperty(this.getPropertyName(),resultOM);
-        }
-
+        boolean propTempate = velocityEngine.evaluate(context, writer, "propTempate", new StringReader(this.getBody()));
+        handleOutput(writer.toString(),messageContext);
         return true;
+    }
+
+    private void handleOutput(String result,MessageContext messageContext){
+        TargetType targetType = TargetType.valueOf(this.targetType);
+        switch (targetType){
+            case body:
+                //clean up body and add to the body
+                handleBody(result,messageContext);
+                break;
+            case property:
+                //add to the correct scope
+                break;
+            case envelop:
+                //replace envelope
+                break;
+            case header:
+                //add to soap header
+                break;
+            default:
+                //add to body
+                break;
+        }
+    }
+
+    private void handleBody(String result,MessageContext messageContext) {
+                  OMElement resultOM=null;
+            //convert to xml and set to the body
+            try {
+                if(StringUtils.equals("xml",mediaType)) {
+                    resultOM = AXIOMUtil.stringToOM(result);
+                }else {
+                    resultOM= JsonUtil.toXml(new ByteArrayInputStream(result.getBytes()), true);
+                }
+            } catch (XMLStreamException e) {
+                e.printStackTrace();
+            } catch (AxisFault axisFault) {
+                axisFault.printStackTrace();
+            }
+        SOAPBody body = messageContext.getEnvelope().getBody();
+        PropertyTemplateUtils.cleanUp(body);
+        body.addChild(resultOM);
     }
 
     public String getTargetType() {
@@ -124,5 +152,16 @@ public class PropertyTemplateMediator extends AbstractMediator{
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    @Override
+    public void init(SynapseEnvironment synapseEnvironment) {
+        velocityEngine=new VelocityEngine();
+        velocityEngine.init();
+    }
+
+    @Override
+    public void destroy() {
+
     }
 }
