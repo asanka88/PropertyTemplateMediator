@@ -1,20 +1,15 @@
 package org.asanka.dev;
 
-import com.jayway.jsonpath.JsonPath;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
-import org.apache.axiom.om.xpath.AXIOMXPath;
 import org.apache.axiom.soap.SOAPBody;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.lang.StringUtils;
 import org.apache.synapse.ManagedLifecycle;
 import org.apache.synapse.MessageContext;
-import org.apache.synapse.SynapseException;
 import org.apache.synapse.commons.json.JsonUtil;
 import org.apache.synapse.core.SynapseEnvironment;
-import org.apache.synapse.core.axis2.SOAPUtils;
 import org.apache.synapse.mediators.AbstractMediator;
-import org.apache.synapse.util.AXIOMUtils;
 import org.apache.synapse.util.xpath.SynapseXPath;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -26,7 +21,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,7 +38,6 @@ public class PropertyTemplateMediator extends AbstractMediator implements Manage
 
     public boolean mediate(MessageContext messageContext) {
         //evaluate values
-        Map<String,Object> evaluatedValues=new HashMap<String, Object>();
         VelocityContext context = new VelocityContext();
         Iterator<Map.Entry<String,SynapseXPath>> xPathIterator = xPathExpressions.entrySet().iterator();
         while (xPathIterator.hasNext()){
@@ -56,7 +49,6 @@ public class PropertyTemplateMediator extends AbstractMediator implements Manage
                 //TODO:handler exception
                 e.printStackTrace();
             }
-
         }
         StringWriter writer = new StringWriter();
         boolean propTempate = velocityEngine.evaluate(context, writer, "propTempate", new StringReader(this.getBody()));
@@ -82,6 +74,7 @@ public class PropertyTemplateMediator extends AbstractMediator implements Manage
                 break;
             default:
                 //add to body
+                handleBody(result,messageContext);
                 break;
         }
     }
