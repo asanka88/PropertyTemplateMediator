@@ -14,7 +14,7 @@ Sample Syntax
       <arg name="name" expression="$ctx:name" />
       <arg name="age" expression="$ctx:age" />
    </args>
-   <target type="property|body|custom|header" name="propertyName" scope="propertyScope" />
+   <target target-type="property|body|custom|header" name="propertyName" property-type="string|om" scope="synapse|axis2|operation" />
 </propertyTemplate>
 ```
 
