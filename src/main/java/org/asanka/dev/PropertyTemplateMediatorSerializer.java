@@ -63,6 +63,9 @@ public class PropertyTemplateMediatorSerializer extends AbstractMediatorSerializ
                     getPropertyName(),null);
             targetElement.addAttribute(PropertyTemplateMediatorFactory.scopeAttribute.getLocalPart(),propertyTemplateMediator.
                     getScope(),null);
+            targetElement.addAttribute(PropertyTemplateMediatorFactory.propertyTypeAttribute.getLocalPart(),propertyTemplateMediator
+                    .getPropertyType(),null);
+
         }
 
         mediatorRoot.addChild(targetElement);

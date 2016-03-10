@@ -1,7 +1,6 @@
 package org.asanka.dev;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.synapse.Mediator;
 import org.apache.synapse.config.xml.AbstractMediatorFactory;
@@ -11,7 +10,10 @@ import org.apache.synapse.util.xpath.SynapseXPath;
 import org.jaxen.JaxenException;
 
 import javax.xml.namespace.QName;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Created by asanka on 3/7/16.
@@ -25,10 +27,9 @@ public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
     public static final QName expressionAttribute=new QName("expression");
     public static final QName nameAttribute =new QName("name");
     public static final QName scopeAttribute=new QName("scope");
+    public static final QName propertyTypeAttribute=new QName("property-type");
     public static final QName mediaTypeAttribute=new QName("media-type");
-    public static final String[] supportedMediaTypes={"xml","json"};
-    public static final QName targetType=new QName("type");
-    public static final String[] supportedTargetypes={"body","property","soap-header","soap-envelope"};
+    public static final QName targetType=new QName("target-type");
 
 
 
@@ -37,14 +38,6 @@ public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
         PropertyTemplateMediator mediator=new PropertyTemplateMediator();
         String mediaTypeAttrValue = omElement.getAttributeValue(mediaTypeAttribute);
         String mediaType = StringUtils.isEmpty(mediaTypeAttrValue)?"xml":mediaTypeAttrValue;
-        if(StringUtils.isEmpty(mediaType)){
-            mediaType="xml";//setting default media type
-        }else{
-            if(ArrayUtils.indexOf(supportedMediaTypes,mediaType)<0){
-                String message =String.format("Unsupported media type %s in PropertyTemplate Mediator",mediaType) ;
-                throw new SynapseArtifactDeploymentException(message);
-            }
-        }
         mediator.setMediaType(mediaType);//setting media type
         OMElement format = omElement.getFirstChildWithName(formatElement);
         if(format == null || (StringUtils.equals("xml",mediaType)&& format.getFirstElement()==null) ||
@@ -89,18 +82,19 @@ public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
         if(StringUtils.equalsIgnoreCase("property",targetTypeValue)){
             //if the target type is property then property name is mandotary
             String propertyName = targetEle.getAttributeValue(nameAttribute);
+            String propertyType = targetEle.getAttributeValue(propertyTypeAttribute);
+
             if(StringUtils.isEmpty(propertyName)){
                 throw new SynapseArtifactDeploymentException("property name attribute is required in Template Mediator," +
                         " when the type is property");
-
             }
             String scope = targetEle.getAttributeValue(scopeAttribute);
-            scope=(StringUtils.isEmpty(scope))?"default":scope;
+            scope=(StringUtils.isEmpty(scope))?"synapse":scope;
+            propertyType=(StringUtils.isEmpty(propertyType))?"string":propertyType;
             mediator.setPropertyName(propertyName);
             mediator.setScope(scope);
+            mediator.setPropertyType(propertyType);
         }
-
-
         return mediator;
     }
 
