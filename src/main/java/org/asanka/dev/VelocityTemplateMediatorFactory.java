@@ -18,8 +18,8 @@ import java.util.Properties;
 /**
  * Created by asanka on 3/7/16.
  */
-public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
-    public static final QName propertyTemplateElement=new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"propertyTemplate");
+public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
+    public static final QName propertyTemplateElement=new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"velocityTemplate");
     public static final QName formatElement=new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"format");
     public static final QName argumentListElement =new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"args");
     public static final QName argumentElement =new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"arg");
@@ -35,7 +35,7 @@ public class PropertyTemplateMediatorFactory extends AbstractMediatorFactory {
 
     @Override
     protected Mediator createSpecificMediator(OMElement omElement, Properties properties) {
-        PropertyTemplateMediator mediator=new PropertyTemplateMediator();
+        VelocityTemplateMediator mediator=new VelocityTemplateMediator();
         String mediaTypeAttrValue = omElement.getAttributeValue(mediaTypeAttribute);
         String mediaType = StringUtils.isEmpty(mediaTypeAttrValue)?"xml":mediaTypeAttrValue;
         mediator.setMediaType(mediaType);//setting media type

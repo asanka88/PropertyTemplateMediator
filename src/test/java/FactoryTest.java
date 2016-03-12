@@ -1,9 +1,9 @@
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
-import org.asanka.dev.PropertyTemplateMediator;
-import org.asanka.dev.PropertyTemplateMediatorFactory;
-import org.asanka.dev.PropertyTemplateMediatorSerializer;
+import org.asanka.dev.VelocityTemplateMediator;
+import org.asanka.dev.VelocityTemplateMediatorFactory;
+import org.asanka.dev.VelocityMediatorSerializer;
 import org.junit.Test;
 
 import javax.xml.namespace.QName;
@@ -31,13 +31,13 @@ public void factoryTestXML() throws XMLStreamException {
             "</propertyTemplate>";
 
     OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
-    PropertyTemplateMediatorFactory factory=new PropertyTemplateMediatorFactory();
-    PropertyTemplateMediator mediator = (PropertyTemplateMediator) factory.createMediator(confOMelemnt, null);
+    VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
+    VelocityTemplateMediator mediator = (VelocityTemplateMediator) factory.createMediator(confOMelemnt, null);
     System.out.printf(mediator.getMediaType());
 //    Assert.assertEquals(mediator.getPropertyName(),"outProp");
 
 
-    PropertyTemplateMediatorSerializer serializer=new PropertyTemplateMediatorSerializer();
+    VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
     OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
     OMElement result = serializer.serializeMediator(null, mediator);
     System.out.printf(result.toString());
@@ -62,14 +62,14 @@ public void factoryTestXML() throws XMLStreamException {
                 "</propertyTemplate>";
 
         OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
-        PropertyTemplateMediatorFactory factory=new PropertyTemplateMediatorFactory();
-        PropertyTemplateMediator mediator = (PropertyTemplateMediator) factory.createMediator(confOMelemnt, null);
+        VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
+        VelocityTemplateMediator mediator = (VelocityTemplateMediator) factory.createMediator(confOMelemnt, null);
         System.out.printf(mediator.getMediaType());
         System.out.printf(mediator.getBody());
 //    Assert.assertEquals(mediator.getPropertyName(),"outProp");
 
 
-    PropertyTemplateMediatorSerializer serializer=new PropertyTemplateMediatorSerializer();
+    VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
     OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
     OMElement result = serializer.serializeMediator(null, mediator);
     System.out.printf(result.toString());
@@ -94,13 +94,13 @@ public void factoryTestXML() throws XMLStreamException {
                 "</propertyTemplate>";
 
         OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
-        PropertyTemplateMediatorFactory factory=new PropertyTemplateMediatorFactory();
-        PropertyTemplateMediator mediator = (PropertyTemplateMediator) factory.createMediator(confOMelemnt, null);
+        VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
+        VelocityTemplateMediator mediator = (VelocityTemplateMediator) factory.createMediator(confOMelemnt, null);
         System.out.printf(mediator.getMediaType());
 //    Assert.assertEquals(mediator.getPropertyName(),"outProp");
 
 
-        PropertyTemplateMediatorSerializer serializer=new PropertyTemplateMediatorSerializer();
+        VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
         OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
         OMElement result = serializer.serializeMediator(null, mediator);
         System.out.printf(result.toString());

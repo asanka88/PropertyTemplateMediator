@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * Created by asanka on 3/7/16.
  */
-public class PropertyTemplateMediator extends AbstractMediator implements ManagedLifecycle{
+public class VelocityTemplateMediator extends AbstractMediator implements ManagedLifecycle{
 
     Map xPathExpressions;
     String body;
