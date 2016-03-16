@@ -5,11 +5,13 @@ Synapse Mediator for creating properties out of templates
 
 Curruntly synapse comes with built in payloadFactory mediator. But there are several drawbacks in it.
 
-1.Doesn’t support arrays
-	You cannot iterate though an array/collection and add those elements to the payload.
-2.Doesn’t support conditional expressions
-	In case you want to add elements based on conditions payloadFactory doesn’t support 
-3. Readability is less since numbered placeholders like $1,$2 are used
+1  Doesn’t support arrays :
+   You cannot iterate though an array/collection and add those elements to the payload.
+   
+2  Doesn’t support conditional expressions:
+   In case you want to add elements based on conditions payloadFactory doesn’t support.
+   
+3  Readability is less since numbered placeholders like $1,$2 are used
 
 
 ##How Velocity Template Mediator solve them?
