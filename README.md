@@ -1,8 +1,6 @@
 # VelocityTemplateMediator
 Synapse Mediator for creating properties out of templates
 
-Documentations
-
 ##Why Velocity Template Mediator ?
 
 Curruntly synapse comes with built in payloadFactory mediator. But there are several drawbacks in it.
