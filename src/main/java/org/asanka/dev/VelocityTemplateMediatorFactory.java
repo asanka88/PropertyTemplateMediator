@@ -66,7 +66,7 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
             try {
                 synXpathMap.put(name,new SynapseXPath(xpathExpression));
             } catch (JaxenException e) {
-                handleException("Error while construcing xpaths from argument "+xpathExpression);
+                handleException("Error while constructing xpath from argument "+xpathExpression);
             }
         }
 
