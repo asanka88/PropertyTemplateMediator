@@ -59,14 +59,14 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
         while(argumentsIterator.hasNext()){
             OMElement argument = argumentsIterator.next();
             String name = argument.getAttributeValue(nameAttribute);
-            String attributeValue = argument.getAttributeValue(expressionAttribute);
-            if(StringUtils.isEmpty(attributeValue) || StringUtils.isEmpty(name)){
+            String xpathExpression = argument.getAttributeValue(expressionAttribute);
+            if(StringUtils.isEmpty(xpathExpression) || StringUtils.isEmpty(name)){
                 throw new SynapseArtifactDeploymentException("expression or name attribute is missing in the arg element");
             }
             try {
-                synXpathMap.put(name,new SynapseXPath(attributeValue));
+                synXpathMap.put(name,new SynapseXPath(xpathExpression));
             } catch (JaxenException e) {
-                e.printStackTrace();
+                handleException("Error while construcing xpaths from argument "+xpathExpression);
             }
         }
 

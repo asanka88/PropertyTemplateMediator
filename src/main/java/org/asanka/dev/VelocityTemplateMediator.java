@@ -49,21 +49,27 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
         Iterator<Map.Entry<String,SynapseXPath>> xPathIterator = xPathExpressions.entrySet().iterator();
         while (xPathIterator.hasNext()){
             Map.Entry<String, SynapseXPath> next = xPathIterator.next();
+            SynapseXPath xpath = null;
             try {
-                Object result = next.getValue().evaluate(messageContext);
+                xpath = next.getValue();
+                Object result = xpath.evaluate(messageContext);
                 context.put(next.getKey(),result);
             } catch (JaxenException e) {
-                //TODO:handler exception
-                e.printStackTrace();
+                String msg = String.format("Error while evaluating argument %s",xpath.getRootExpr().getText());
+                handleException(msg,e,messageContext);
             }
         }
         StringWriter writer = new StringWriter();
         boolean propTempate = velocityEngine.evaluate(context, writer, "propTempate", new StringReader(this.getBody()));
-        handleOutput(writer.toString(),messageContext);
+        try {
+            handleOutput(writer.toString(),messageContext);
+        } catch (XMLStreamException e) {
+            handleException("Error while processing output to the destination",e,messageContext);
+        }
         return true;
     }
 
-    private void handleOutput(String result,MessageContext messageContext){
+    private void handleOutput(String result,MessageContext messageContext) throws XMLStreamException {
         switch (targetType){
             case body:
                 //clean up body and add to the body
@@ -86,7 +92,7 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
         }
     }
 
-    private void handleProperty(String result, MessageContext messageContext) {
+    private void handleProperty(String result, MessageContext messageContext) throws XMLStreamException {
         Object formattedProperty = getFormattedProperty(result, propertyType);
         switch (scope){
             case synapse:
@@ -103,19 +109,13 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
         }
     }
 
-    private Object getFormattedProperty(String result, PropertyTypes propertyType) {
+    private Object getFormattedProperty(String result, PropertyTypes propertyType) throws XMLStreamException {
         switch (propertyType){
             case string:
                 return result;
             case om:
-                try {
                     OMElement omElement = AXIOMUtil.stringToOM(result);
                     return omElement;
-                } catch (XMLStreamException e) {
-                    e.printStackTrace();
-                }
-                break;
-
         }
         return null;
     }
