@@ -5,6 +5,8 @@ import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.axiom.soap.SOAPBody;
 import org.apache.axis2.AxisFault;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.ManagedLifecycle;
 import org.apache.synapse.MessageContext;
 import org.apache.synapse.SynapseException;
@@ -34,17 +36,22 @@ import java.util.Map;
  */
 public class VelocityTemplateMediator extends AbstractMediator implements ManagedLifecycle{
 
-    Map xPathExpressions;
-    String body;
-    String propertyName;
-    Scopes scope;
-    MediaTypes mediaType;
-    TargetType targetType;
-    PropertyTypes propertyType;
-    VelocityEngine velocityEngine;
+    private static final Log LOG= LogFactory.getLog(VelocityTemplateMediator.class);
+    private Map xPathExpressions;
+    private String body;
+    private String propertyName;
+    private Scopes scope;
+    private MediaTypes mediaType;
+    private TargetType targetType;
+    private PropertyTypes propertyType;
+    private VelocityEngine velocityEngine;
 
     public boolean mediate(MessageContext messageContext) {
         //evaluate values
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Velocity Template mediator started for "+messageContext.getMessageID());
+        }
+
         VelocityContext context = new VelocityContext();
         Iterator<Map.Entry<String,SynapseXPath>> xPathIterator = xPathExpressions.entrySet().iterator();
         while (xPathIterator.hasNext()){
@@ -53,23 +60,39 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
             try {
                 xpath = next.getValue();
                 Object result = xpath.evaluate(messageContext);
+                if(LOG.isDebugEnabled()){
+                    String msg=String.format("Argument %s result== %s",xpath.getRootExpr().getText(),result.toString());
+                    LOG.debug(msg);
+                }
                 context.put(next.getKey(),result);
             } catch (JaxenException e) {
                 String msg = String.format("Error while evaluating argument %s",xpath.getRootExpr().getText());
+                LOG.error(msg,e);
                 handleException(msg,e,messageContext);
             }
         }
         StringWriter writer = new StringWriter();
         boolean propTempate = velocityEngine.evaluate(context, writer, "propTempate", new StringReader(this.getBody()));
         try {
-            handleOutput(writer.toString(),messageContext);
+            String result = writer.toString();
+            if(LOG.isDebugEnabled()){
+                LOG.debug(":::Resulted output from template:::");
+                LOG.debug(result);
+            }
+            handleOutput(result,messageContext);
         } catch (XMLStreamException e) {
-            handleException("Error while processing output to the destination",e,messageContext);
+            String msg = "Error while processing output to the destination";
+            LOG.error(msg,e);
+            handleException(msg,e,messageContext);
+        } catch (AxisFault e) {
+            String msg = "Error while processing output to message body";
+            LOG.error(msg,e);
+            handleException(msg,e,messageContext);
         }
         return true;
     }
 
-    private void handleOutput(String result,MessageContext messageContext) throws XMLStreamException {
+    private void handleOutput(String result,MessageContext messageContext) throws XMLStreamException, AxisFault {
         switch (targetType){
             case body:
                 //clean up body and add to the body
@@ -94,6 +117,10 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
 
     private void handleProperty(String result, MessageContext messageContext) throws XMLStreamException {
         Object formattedProperty = getFormattedProperty(result, propertyType);
+        if(LOG.isDebugEnabled()){
+            String msg = String.format("Target type:: property , scope %s",this.scope);
+            LOG.debug(msg);
+        }
         switch (scope){
             case synapse:
                 messageContext.setProperty(this.propertyName,formattedProperty);
@@ -121,20 +148,16 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
     }
 
 
-    private void handleBody(String result,MessageContext messageContext) {
+    private void handleBody(String result,MessageContext messageContext) throws AxisFault, XMLStreamException {
                   OMElement resultOM=null;
             //convert to xml and set to the body
-            try {
-                if(mediaType==MediaTypes.xml) {
-                    resultOM = AXIOMUtil.stringToOM(result);
-                }else {
-                    resultOM= JsonUtil.toXml(new ByteArrayInputStream(result.getBytes()), true);
-                }
-            } catch (XMLStreamException e) {
-                e.printStackTrace();
-            } catch (AxisFault axisFault) {
-                axisFault.printStackTrace();
+
+            if(mediaType==MediaTypes.xml) {
+                resultOM = AXIOMUtil.stringToOM(result);
+            }else {
+                resultOM= JsonUtil.toXml(new ByteArrayInputStream(result.getBytes()), true);
             }
+
         SOAPBody body = messageContext.getEnvelope().getBody();
         PropertyTemplateUtils.cleanUp(body);
         body.addChild(resultOM);
@@ -220,6 +243,9 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
 
     @Override
     public void init(SynapseEnvironment synapseEnvironment) {
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Initalizing Velocity Engine");
+        }
         velocityEngine=new VelocityEngine();
         velocityEngine.init();
     }

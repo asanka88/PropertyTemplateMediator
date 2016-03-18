@@ -2,6 +2,8 @@ package org.asanka.dev;
 
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.Mediator;
 import org.apache.synapse.config.xml.AbstractMediatorFactory;
 import org.apache.synapse.config.xml.XMLConfigConstants;
@@ -30,14 +32,16 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
     public static final QName propertyTypeAttribute=new QName("property-type");
     public static final QName mediaTypeAttribute=new QName("media-type");
     public static final QName targetType=new QName("target-type");
-
-
+    private static final Log LOG= LogFactory.getLog(VelocityTemplateMediatorFactory.class);
 
     @Override
     protected Mediator createSpecificMediator(OMElement omElement, Properties properties) {
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Creating VelocityTemplateMediator out of "+omElement.toString());
+        }
         VelocityTemplateMediator mediator=new VelocityTemplateMediator();
-        String mediaTypeAttrValue = omElement.getAttributeValue(mediaTypeAttribute);
-        String mediaType = StringUtils.isEmpty(mediaTypeAttrValue)?"xml":mediaTypeAttrValue;
+        String mediaTypeAttrValue = omElement.getAttributeValue(mediaTypeAttribute);//reading media type
+        String mediaType = StringUtils.isEmpty(mediaTypeAttrValue)?"xml":mediaTypeAttrValue;//if null default media type is xml
         mediator.setMediaType(mediaType);//setting media type
         OMElement format = omElement.getFirstChildWithName(formatElement);
         if(format == null || (StringUtils.equals("xml",mediaType)&& format.getFirstElement()==null) ||
@@ -61,12 +65,16 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
             String name = argument.getAttributeValue(nameAttribute);
             String xpathExpression = argument.getAttributeValue(expressionAttribute);
             if(StringUtils.isEmpty(xpathExpression) || StringUtils.isEmpty(name)){
-                throw new SynapseArtifactDeploymentException("expression or name attribute is missing in the arg element");
+                String msg = "expression or name attribute is missing in the arg element";
+                LOG.error(msg);
+                throw new SynapseArtifactDeploymentException(msg);
             }
             try {
                 synXpathMap.put(name,new SynapseXPath(xpathExpression));
             } catch (JaxenException e) {
-                handleException("Error while constructing xpath from argument "+xpathExpression);
+                String msg = "Error while constructing xpath from argument " + xpathExpression;
+                LOG.error(msg,e);
+                handleException(msg);
             }
         }
 
@@ -85,8 +93,10 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
             String propertyType = targetEle.getAttributeValue(propertyTypeAttribute);
 
             if(StringUtils.isEmpty(propertyName)){
-                throw new SynapseArtifactDeploymentException("property name attribute is required in Template Mediator," +
-                        " when the type is property");
+                String msg = "property name attribute is required in Template Mediator," +
+                        " when the type is property";
+                LOG.error(msg);
+                throw new SynapseArtifactDeploymentException(msg);
             }
             String scope = targetEle.getAttributeValue(scopeAttribute);
             scope=(StringUtils.isEmpty(scope))?"synapse":scope;
