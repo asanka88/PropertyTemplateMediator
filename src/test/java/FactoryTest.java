@@ -79,19 +79,20 @@ public void factoryTestXML() throws XMLStreamException {
     @Test
     public void factoryTestXMLProperty() throws XMLStreamException {
 
-        String conf="<propertyTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
+        String conf="<velocityTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
                 "   <format>\n" +
-                "      <person>\n" +
+                "      <person xmlns=\"\">\n" +
                 "         <name>$name</name>\n" +
                 "         <age>$age</age>\n" +
                 "      </person>\n" +
                 "   </format>\n" +
                 "   <args>\n" +
-                "      <arg name=\"name\" expression=\"$ctx:name\" />\n" +
-                "      <arg name=\"age\" expression=\"$ctx:age\" />\n" +
+                "      <arg name=\"name\" expression=\"//name\" type=\"string\"/>\n" +
+                "      <arg name=\"age\" expression=\"//age\" type=\"string\"/>\n" +
+                "      <arg name=\"age1\" expression=\"$ctx:age\" type=\"string\"/>\n" +
                 "   </args>\n" +
-                "   <target target-type=\"property\" name=\"propertyName\" scope=\"synapse\" />\n" +
-                "</propertyTemplate>";
+                "   <target target-type=\"body\"/>\n" +
+                "</velocityTemplate>";
 
         OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
         VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
@@ -105,6 +106,10 @@ public void factoryTestXML() throws XMLStreamException {
         OMElement result = serializer.serializeMediator(null, mediator);
         System.out.printf(result.toString());
 
+    }
+
+    @Test
+    public void test(){
     }
 
 
