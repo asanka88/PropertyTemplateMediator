@@ -28,6 +28,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -53,13 +54,14 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
         }
 
         VelocityContext context = new VelocityContext();
-        Iterator<Map.Entry<String,SynapseXPath>> xPathIterator = xPathExpressions.entrySet().iterator();
+        Iterator<Map.Entry<String,ArgXpath>> xPathIterator = xPathExpressions.entrySet().iterator();
         while (xPathIterator.hasNext()){
-            Map.Entry<String, SynapseXPath> next = xPathIterator.next();
-            SynapseXPath xpath = null;
+            Map.Entry<String, ArgXpath> next = xPathIterator.next();
+            ArgXpath xpath = null;
             try {
                 xpath = next.getValue();
-                Object result = xpath.evaluate(messageContext);
+                Object result = xpath.getFormattedResult(messageContext);
+
                 if(LOG.isDebugEnabled()){
                     String msg=String.format("Argument %s result== %s",xpath.getRootExpr().getText(),result.toString());
                     LOG.debug(msg);

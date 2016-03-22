@@ -39,13 +39,17 @@ public class VelocityMediatorSerializer extends AbstractMediatorSerializer {
 
         mediatorRoot.addChild(formatOmElement);
         OMElement argsListElement = fac.createOMElement(VelocityTemplateMediatorFactory.argumentListElement);
-        Iterator<Map.Entry<String,SynapseXPath>> iterator = velocityTemplateMediator.getxPathExpressions().entrySet().iterator();
+        Iterator<Map.Entry<String,ArgXpath>> iterator = velocityTemplateMediator.getxPathExpressions().entrySet().iterator();
 
         while (iterator.hasNext()){
-            Map.Entry<String, SynapseXPath> next = iterator.next();
+            Map.Entry<String, ArgXpath> next = iterator.next();
             OMElement arg = fac.createOMElement(VelocityTemplateMediatorFactory.argumentElement);
             arg.addAttribute(VelocityTemplateMediatorFactory.nameAttribute.getLocalPart(),next.getKey(),null);
-            arg.addAttribute(VelocityTemplateMediatorFactory.expressionAttribute.getLocalPart(),next.getValue().getRootExpr().getText(),null);
+            arg.addAttribute(VelocityTemplateMediatorFactory.expressionAttribute.getLocalPart(),next.getValue().getExpression(),null);
+            if(next.getValue().getType()!=null){
+                arg.addAttribute(VelocityTemplateMediatorFactory.argTypeAttribute.getLocalPart(),next.getValue().getType().toString(),null);
+            }
+
             argsListElement.addChild(arg);
         }
 

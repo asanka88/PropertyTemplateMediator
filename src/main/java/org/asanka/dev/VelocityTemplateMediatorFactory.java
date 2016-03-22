@@ -28,6 +28,7 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
     public static final QName targetElement =new QName(XMLConfigConstants.SYNAPSE_NAMESPACE,"target");
     public static final QName expressionAttribute=new QName("expression");
     public static final QName nameAttribute =new QName("name");
+    public static final QName argTypeAttribute=new QName("type");
     public static final QName scopeAttribute=new QName("scope");
     public static final QName propertyTypeAttribute=new QName("property-type");
     public static final QName mediaTypeAttribute=new QName("media-type");
@@ -59,18 +60,19 @@ public class VelocityTemplateMediatorFactory extends AbstractMediatorFactory {
 
         OMElement argumentList = omElement.getFirstChildWithName(argumentListElement);
         Iterator<OMElement> argumentsIterator = argumentList.getChildrenWithName(argumentElement);
-        Map<String,SynapseXPath> synXpathMap= new HashMap<String, SynapseXPath>();
+        Map<String,ArgXpath> synXpathMap= new HashMap<String, ArgXpath>();
         while(argumentsIterator.hasNext()){
             OMElement argument = argumentsIterator.next();
             String name = argument.getAttributeValue(nameAttribute);
             String xpathExpression = argument.getAttributeValue(expressionAttribute);
+            String argType = argument.getAttributeValue(argTypeAttribute);
             if(StringUtils.isEmpty(xpathExpression) || StringUtils.isEmpty(name)){
                 String msg = "expression or name attribute is missing in the arg element";
                 LOG.error(msg);
                 throw new SynapseArtifactDeploymentException(msg);
             }
             try {
-                synXpathMap.put(name,new SynapseXPath(xpathExpression));
+                synXpathMap.put(name,new ArgXpath(xpathExpression,argType));
             } catch (JaxenException e) {
                 String msg = "Error while constructing xpath from argument " + xpathExpression;
                 LOG.error(msg,e);
