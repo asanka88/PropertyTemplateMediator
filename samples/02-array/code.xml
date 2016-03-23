@@ -1,0 +1,16 @@
+<velocityTemplate media-type="xml" xmlns="http://ws.apache.org/ns/synapse">
+   <format>
+    <students>
+        #foreach($student in $students)
+            <student>
+                <name>$student.getText()</name>
+            </student>
+        #end
+    </students>
+      
+   </format>
+   <args>
+      <arg name="students" expression="//name/text()" type="string" />
+   </args>
+   <target target-type="body"/>
+</velocityTemplate>

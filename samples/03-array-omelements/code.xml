@@ -1,0 +1,14 @@
+<velocityTemplate media-type="xml" xmlns="http://ws.apache.org/ns/synapse">
+   <format>
+    <students>
+        #foreach($student in $students)
+                $student
+        #end
+    </students>
+      
+   </format>
+   <args>
+      <arg name="students" expression="//person" type="string" />
+   </args>
+   <target target-type="body"/>
+</velocityTemplate>

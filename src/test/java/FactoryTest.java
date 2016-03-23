@@ -13,7 +13,6 @@ import javax.xml.stream.XMLStreamException;
  * Created by asanka on 3/7/16.
  */
 public class FactoryTest {
-@Test
 public void factoryTestXML() throws XMLStreamException {
 
     String conf="<propertyTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
@@ -33,7 +32,7 @@ public void factoryTestXML() throws XMLStreamException {
     OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
     VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
     VelocityTemplateMediator mediator = (VelocityTemplateMediator) factory.createMediator(confOMelemnt, null);
-    System.out.printf(mediator.getMediaType());
+//    System.out.printf(mediator.getMediaType());
 //    Assert.assertEquals(mediator.getPropertyName(),"outProp");
 
 
@@ -45,7 +44,6 @@ public void factoryTestXML() throws XMLStreamException {
 }
 
 
-@Test
     public void factoryTestJSON() throws XMLStreamException {
 
         String conf="<propertyTemplate media-type=\"json\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
@@ -72,11 +70,10 @@ public void factoryTestXML() throws XMLStreamException {
     VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
     OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
     OMElement result = serializer.serializeMediator(null, mediator);
-    System.out.printf(result.toString());
+ //   System.out.printf(result.toString());
 
     }
 
-    @Test
     public void factoryTestXMLProperty() throws XMLStreamException {
 
         String conf="<velocityTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
@@ -97,18 +94,17 @@ public void factoryTestXML() throws XMLStreamException {
         OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
         VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
         VelocityTemplateMediator mediator = (VelocityTemplateMediator) factory.createMediator(confOMelemnt, null);
-        System.out.printf(mediator.getMediaType());
+      //  System.out.printf(mediator.getMediaType());
 //    Assert.assertEquals(mediator.getPropertyName(),"outProp");
 
 
         VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
         OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
         OMElement result = serializer.serializeMediator(null, mediator);
-        System.out.printf(result.toString());
+        //System.out.printf(result.toString());
 
     }
 
-    @Test
     public void test(){
     }
 

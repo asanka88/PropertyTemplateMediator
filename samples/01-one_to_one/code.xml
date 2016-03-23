@@ -1,0 +1,13 @@
+<velocityTemplate media-type="xml" xmlns="http://ws.apache.org/ns/synapse">
+   <format>
+      <person xmlns="">
+         <name>$name.getText()</name>
+         <age>$age.getText()</age>
+      </person>
+   </format>
+   <args>
+      <arg name="name" expression="//name" />
+      <arg name="age" expression="//age" />
+   </args>
+   <target target-type="body"/>
+</velocityTemplate>
