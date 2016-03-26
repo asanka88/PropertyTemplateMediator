@@ -1,3 +1,4 @@
+import junit.framework.TestCase;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
@@ -8,48 +9,49 @@ import org.junit.Test;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
+import java.util.Map;
 
 /**
  * Created by asanka on 3/7/16.
  */
-public class FactoryTest {
-public void factoryTestXML() throws XMLStreamException {
+public class VelocityMediatorFactoryTest extends TestCase {
+public void testFactoryXML() throws XMLStreamException {
 
-    String conf="<propertyTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
+    String conf="<velocityTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
             "   <format>\n" +
-            "      <person>\n" +
-            "         <name>$name</name>\n" +
-            "         <age>$age</age>\n" +
+            "      <person xmlns=\"\">\n" +
+            "         <name>$name.getText()</name>\n" +
+            "         <age>$age.getText()</age>\n" +
             "      </person>\n" +
             "   </format>\n" +
             "   <args>\n" +
-            "      <arg name=\"name\" expression=\"$ctx:name\" />\n" +
-            "      <arg name=\"age\" expression=\"$ctx:age\" />\n" +
+            "      <arg name=\"name\" expression=\"//name\" />\n" +
+            "      <arg name=\"age\" expression=\"//age\" />\n" +
             "   </args>\n" +
-            "   <target type=\"property\" name=\"propertyName\" scope=\"propertyScope\" />\n" +
-            "</propertyTemplate>";
+            "   <target target-type=\"body\"/>\n" +
+            "</velocityTemplate>";
 
     OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
     VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
     VelocityTemplateMediator mediator = (VelocityTemplateMediator) factory.createMediator(confOMelemnt, null);
-//    System.out.printf(mediator.getMediaType());
-//    Assert.assertEquals(mediator.getPropertyName(),"outProp");
+    assertEquals("body",mediator.getTargetType());
+    Map map = mediator.getxPathExpressions();
+    assertEquals(map.size(),2);
 
-
-    VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
-    OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
-    OMElement result = serializer.serializeMediator(null, mediator);
-    System.out.printf(result.toString());
+    //
+//    VelocityMediatorSerializer serializer=new VelocityMediatorSerializer();
+//    OMElement root = OMAbstractFactory.getOMFactory().createOMElement(new QName("<root/>"));
+//    OMElement result = serializer.serializeMediator(null, mediator);
 
 }
 
 
-    public void factoryTestJSON() throws XMLStreamException {
+    public void testFactoryJSON() throws XMLStreamException {
 
-        String conf="<propertyTemplate media-type=\"json\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
+        String conf="<velocityTemplate media-type=\"json\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
                 "   <format>\n" +
                 "      {\"name\":$name,\n" +
-                "      \"age\"\"$age\n" +
+                "      \"age\":$age\n" +
                 "      }\n" +
                 "   </format>\n" +
                 "   <args>\n" +
@@ -57,7 +59,7 @@ public void factoryTestXML() throws XMLStreamException {
                 "      <arg name=\"age\" expression=\"$ctx:age\" />\n" +
                 "   </args>\n" +
                 "   <target type=\"property\" name=\"propertyName\" scope=\"propertyScope\" />\n" +
-                "</propertyTemplate>";
+                "</velocityTemplate>";
 
         OMElement confOMelemnt = AXIOMUtil.stringToOM(conf);
         VelocityTemplateMediatorFactory factory=new VelocityTemplateMediatorFactory();
@@ -74,7 +76,7 @@ public void factoryTestXML() throws XMLStreamException {
 
     }
 
-    public void factoryTestXMLProperty() throws XMLStreamException {
+    public void testFactoryXMLProperty() throws XMLStreamException {
 
         String conf="<velocityTemplate media-type=\"xml\" xmlns=\"http://ws.apache.org/ns/synapse\">\n" +
                 "   <format>\n" +

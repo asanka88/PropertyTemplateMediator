@@ -1,9 +1,21 @@
 package org.asanka.dev;
 
+import com.mchange.v2.c3p0.impl.C3P0Defaults;
+import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.OMFactory;
+import org.apache.axiom.om.impl.AbstractOMMetaFactory;
 import org.apache.axiom.om.util.AXIOMUtil;
+import org.apache.axiom.soap.*;
 import org.apache.axiom.soap.SOAPBody;
+import org.apache.axiom.soap.SOAPEnvelope;
+import org.apache.axiom.soap.SOAPFactory;
+import org.apache.axiom.soap.SOAPHeader;
+import org.apache.axiom.soap.impl.dom.soap11.SOAP11Factory;
+import org.apache.axiom.soap.impl.dom.soap11.SOAP11HeaderImpl;
+import org.apache.axiom.soap.impl.dom.soap12.SOAP12Factory;
 import org.apache.axis2.AxisFault;
+import org.apache.axis2.saaj.SOAPFactoryImpl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,8 +25,10 @@ import org.apache.synapse.SynapseException;
 import org.apache.synapse.commons.json.JsonUtil;
 import org.apache.synapse.core.SynapseEnvironment;
 import org.apache.synapse.core.axis2.Axis2MessageContext;
+import org.apache.synapse.core.axis2.SOAPUtils;
 import org.apache.synapse.deployers.SynapseArtifactDeploymentException;
 import org.apache.synapse.mediators.AbstractMediator;
+import org.apache.synapse.util.AXIOMUtils;
 import org.apache.synapse.util.xpath.SynapseXPath;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -24,6 +38,8 @@ import org.asanka.dev.enums.Scopes;
 import org.asanka.dev.enums.TargetType;
 import org.jaxen.JaxenException;
 
+import javax.xml.namespace.QName;
+import javax.xml.soap.*;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -38,6 +54,10 @@ import java.util.Map;
 public class VelocityTemplateMediator extends AbstractMediator implements ManagedLifecycle{
 
     private static final Log LOG= LogFactory.getLog(VelocityTemplateMediator.class);
+    public static final SOAP11Factory SOAP_11_FACTORY = new SOAP11Factory();
+    public static final SOAP12Factory SOAP_12_FACTORY = new SOAP12Factory();
+    public static final SOAPFactory SOAP_12_FACTORY1 = OMAbstractFactory.getSOAP12Factory();
+    public static final SOAPFactory SOAP_11_FACTORY1 = OMAbstractFactory.getSOAP11Factory();
     private Map xPathExpressions;
     private String body;
     private String propertyName;
@@ -90,11 +110,15 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
             String msg = "Error while processing output to message body";
             LOG.error(msg,e);
             handleException(msg,e,messageContext);
+        } catch (SOAPException e) {
+            String msg = "Error while processing output to soap header";
+            LOG.error(msg,e);
+            handleException(msg,e,messageContext);
         }
         return true;
     }
 
-    private void handleOutput(String result,MessageContext messageContext) throws XMLStreamException, AxisFault {
+    private void handleOutput(String result,MessageContext messageContext) throws XMLStreamException, AxisFault, SOAPException {
         switch (targetType){
             case body:
                 //clean up body and add to the body
@@ -104,11 +128,13 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
                 //add to the correct scope
                 handleProperty(result,messageContext);
                 break;
-            case envelop:
+            case envelope:
                 //replace envelope
+                handleEnvelope(result,messageContext);
                 break;
             case header:
                 //add to soap header
+                handleHeader(result,messageContext);
                 break;
             default:
                 //add to body
@@ -159,6 +185,76 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
             }else {
                 resultOM= JsonUtil.toXml(new ByteArrayInputStream(result.getBytes()), true);
             }
+
+        SOAPBody body = messageContext.getEnvelope().getBody();
+        PropertyTemplateUtils.cleanUp(body);
+        body.addChild(resultOM);
+    }
+
+
+    private void handleHeader(String result,MessageContext messageContext) throws AxisFault, XMLStreamException, SOAPException {
+        OMElement resultOM=null;
+        //convert to xml and set to the body
+
+        if(mediaType==MediaTypes.xml) {
+            resultOM = AXIOMUtil.stringToOM(result);
+            SOAPEnvelope envelope = messageContext.getEnvelope();
+            SOAPHeader header = envelope.getHeader();
+            boolean soap11 = isSOAP11(envelope);
+            if(header==null){
+                if(soap11){
+                    header= SOAP_11_FACTORY1.createSOAPHeader(envelope);
+                }else{
+                    header= SOAP_12_FACTORY1.createSOAPHeader(envelope);
+                }
+            }
+            SOAPHeaderBlock headerBlock;
+            if(soap11){
+                headerBlock = SOAP_11_FACTORY1.createSOAPHeaderBlock(resultOM.getLocalName(),resultOM.getNamespace(),header);
+            }else{
+                headerBlock = SOAP_12_FACTORY1.createSOAPHeaderBlock(resultOM.getLocalName(),resultOM.getNamespace(),header);
+            }
+            Iterator<OMElement> children = resultOM.getChildElements();
+            while (children.hasNext()){
+                OMElement next = children.next();
+                headerBlock.addChild(next);
+            }
+
+
+        }
+
+    }
+
+
+    private boolean isSOAP11(SOAPEnvelope envelope) {
+        return (SOAP11Constants.SOAP_ENVELOPE_NAMESPACE_URI).equals(envelope.getNamespace().getNamespaceURI());
+    }
+
+
+    private void handleEnvelope(String result,MessageContext messageContext) throws AxisFault, XMLStreamException {
+        OMElement resultOM=null;
+        //convert to xml and set to the body
+
+        if(mediaType==MediaTypes.xml) {
+            resultOM = AXIOMUtil.stringToOM(result);
+            QName firstChild = resultOM.getQName();
+            if (firstChild.getLocalPart().equalsIgnoreCase("envelope") && (
+                    firstChild.getNamespaceURI().equals(SOAP11Constants.SOAP_ENVELOPE_NAMESPACE_URI) ||
+                            firstChild.getNamespaceURI().
+                                    equals(SOAP12Constants.SOAP_ENVELOPE_NAMESPACE_URI))){
+                //result is soap envelope
+                SOAPEnvelope soapEnv = AXIOMUtils.getSOAPEnvFromOM(resultOM);
+                if(soapEnv!=null){
+                    soapEnv.buildWithAttachments();
+                    messageContext.setEnvelope(soapEnv);
+                }
+
+            }else{
+                String msg = "Result from Velocity template mediator is not an Envelope. Invalid target as envelope";
+                LOG.error(msg);
+                throw new SynapseException(msg);
+            }
+        }
 
         SOAPBody body = messageContext.getEnvelope().getBody();
         PropertyTemplateUtils.cleanUp(body);

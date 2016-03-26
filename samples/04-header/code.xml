@@ -1,0 +1,11 @@
+<velocityTemplate media-type="xml" xmlns="http://ws.apache.org/ns/synapse">
+   <format>
+      <person xmlns="">
+         <name>$code</name>
+      </person>
+   </format>
+   <args>
+      <arg name="code" expression="$ctx:code"/>
+   </args>
+   <target target-type="header"/>
+</velocityTemplate>

@@ -7,5 +7,5 @@ public enum TargetType {
     body,
     property,
     header,
-    envelop
+    envelope
 }

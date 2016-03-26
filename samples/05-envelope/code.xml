@@ -1,0 +1,18 @@
+<velocityTemplate media-type="xml" xmlns="http://ws.apache.org/ns/synapse">
+   <format>
+     <sopaenv:Envelope
+  xmlns:sopaenv="http://schemas.xmlsoap.org/soap/envelope/"
+  sopaenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+   <sopaenv:Body>
+       <m:GetLastTradePrice xmlns:m="Some-URI">
+           <symbol>$code</symbol>
+       </m:GetLastTradePrice>
+   </sopaenv:Body>
+</sopaenv:Envelope> 
+      
+   </format>
+   <args>
+      <arg name="code" expression="$ctx:code"/>
+   </args>
+   <target target-type="envelope"/>
+</velocityTemplate>
