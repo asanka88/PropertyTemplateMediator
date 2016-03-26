@@ -1,22 +1,14 @@
 package org.asanka.dev;
 
-import com.mchange.v2.c3p0.impl.C3P0Defaults;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
-import org.apache.axiom.om.OMFactory;
-import org.apache.axiom.om.impl.AbstractOMMetaFactory;
 import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.axiom.soap.*;
 import org.apache.axiom.soap.SOAPBody;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axiom.soap.SOAPFactory;
 import org.apache.axiom.soap.SOAPHeader;
-import org.apache.axiom.soap.impl.dom.soap11.SOAP11Factory;
-import org.apache.axiom.soap.impl.dom.soap11.SOAP11HeaderImpl;
-import org.apache.axiom.soap.impl.dom.soap12.SOAP12Factory;
 import org.apache.axis2.AxisFault;
-import org.apache.axis2.saaj.SOAPFactoryImpl;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.ManagedLifecycle;
@@ -25,11 +17,9 @@ import org.apache.synapse.SynapseException;
 import org.apache.synapse.commons.json.JsonUtil;
 import org.apache.synapse.core.SynapseEnvironment;
 import org.apache.synapse.core.axis2.Axis2MessageContext;
-import org.apache.synapse.core.axis2.SOAPUtils;
 import org.apache.synapse.deployers.SynapseArtifactDeploymentException;
 import org.apache.synapse.mediators.AbstractMediator;
 import org.apache.synapse.util.AXIOMUtils;
-import org.apache.synapse.util.xpath.SynapseXPath;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.asanka.dev.enums.MediaTypes;
@@ -44,7 +34,6 @@ import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -54,10 +43,8 @@ import java.util.Map;
 public class VelocityTemplateMediator extends AbstractMediator implements ManagedLifecycle{
 
     private static final Log LOG= LogFactory.getLog(VelocityTemplateMediator.class);
-    public static final SOAP11Factory SOAP_11_FACTORY = new SOAP11Factory();
-    public static final SOAP12Factory SOAP_12_FACTORY = new SOAP12Factory();
-    public static final SOAPFactory SOAP_12_FACTORY1 = OMAbstractFactory.getSOAP12Factory();
-    public static final SOAPFactory SOAP_11_FACTORY1 = OMAbstractFactory.getSOAP11Factory();
+    public static final SOAPFactory SOAP_12_FACTORY = OMAbstractFactory.getSOAP12Factory();
+    public static final SOAPFactory SOAP_11_FACTORY = OMAbstractFactory.getSOAP11Factory();
     private Map xPathExpressions;
     private String body;
     private String propertyName;
@@ -203,16 +190,16 @@ public class VelocityTemplateMediator extends AbstractMediator implements Manage
             boolean soap11 = isSOAP11(envelope);
             if(header==null){
                 if(soap11){
-                    header= SOAP_11_FACTORY1.createSOAPHeader(envelope);
+                    header= SOAP_11_FACTORY.createSOAPHeader(envelope);
                 }else{
-                    header= SOAP_12_FACTORY1.createSOAPHeader(envelope);
+                    header= SOAP_12_FACTORY.createSOAPHeader(envelope);
                 }
             }
             SOAPHeaderBlock headerBlock;
             if(soap11){
-                headerBlock = SOAP_11_FACTORY1.createSOAPHeaderBlock(resultOM.getLocalName(),resultOM.getNamespace(),header);
+                headerBlock = SOAP_11_FACTORY.createSOAPHeaderBlock(resultOM.getLocalName(),resultOM.getNamespace(),header);
             }else{
-                headerBlock = SOAP_12_FACTORY1.createSOAPHeaderBlock(resultOM.getLocalName(),resultOM.getNamespace(),header);
+                headerBlock = SOAP_12_FACTORY.createSOAPHeaderBlock(resultOM.getLocalName(),resultOM.getNamespace(),header);
             }
             Iterator<OMElement> children = resultOM.getChildElements();
             while (children.hasNext()){
