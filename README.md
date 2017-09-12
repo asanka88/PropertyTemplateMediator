@@ -1,7 +1,7 @@
 # VelocityTemplateMediator
 Synapse Mediator for creating properties out of templates
 
-##Why Velocity Template Mediator ?
+## Why Velocity Template Mediator ?
 
 Curruntly synapse comes with built in payloadFactory mediator. But there are several drawbacks in it.
 
@@ -14,13 +14,12 @@ Curruntly synapse comes with built in payloadFactory mediator. But there are sev
 3  Readability is less since numbered placeholders like $1,$2 are used
 
 
-##How Velocity Template Mediator solve them?
+## How Velocity Template Mediator solve them?
 
 Velocity template mediator uses well known Apache Velocity as the template engine. You can do whatever you can do with Velocity in side this. Iterate through collections, check conditions etc. In addition to that since we are using place holders like $name,$age for the variables ,so it improves the readability as well.
 
 On the other hand, there was no such a thing in Synapse to create a property out of a template.
 
-For Example:
 When you call a soap back end, suppose you have to send a user name token in SOAP Header.
 Suppose there are several back end calls you need to make and in every call you need to pass the user name token.
 
